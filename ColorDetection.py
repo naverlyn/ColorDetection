@@ -10,7 +10,7 @@ url='http://192.168.1.10/cam-hi.jpg' #uri ngambil yang high resolution
 cv2.namedWindow("Window Deteksi Warna", cv2.WINDOW_AUTOSIZE)
 
 
-#warna kode menggunakan HSV
+#warna kode menggunakan BGR
 l_h, l_s, l_v = 92, 57, 50
 u_h, u_s, u_v = 142, 153, 178
 i_h, i_s, i_v = 24, 0, 0 #new code test
