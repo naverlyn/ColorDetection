@@ -1,86 +1,109 @@
+import numpy as np
 import cv2
 import urllib.request
-import numpy as np
- 
-def nothing(x):
-    pass
- 
-url='http://192.168.43.254/cam-hi.jpg' #uri ngambil yang high resolution
-##'''cam.bmp / cam-lo.jpg /cam-hi.jpg / cam.mjpeg '''
-cv2.namedWindow("Window Deteksi Warna", cv2.WINDOW_AUTOSIZE)
-
-
-#warna kode menggunakan BGR
-l_h, l_s, l_v = 92, 57, 50
-u_h, u_s, u_v = 142, 153, 178
-i_h, i_s, i_v = 24, 0, 0 #new code test
-#========================================#
-k_h, k_s, k_v = 57, 37, 26 #blue dark
-m_h, m_s, m_v = 26, 18, 19 #keyboard
-n_h, n_h, n_v = 159, 114, 93 #keyboard 2
- 
-while True:
-    img_resp=urllib.request.urlopen(url)
-    imgnp=np.array(bytearray(img_resp.read()),dtype=np.uint8)
-    frame=cv2.imdecode(imgnp,-1)
-    #_, frame = cap.read()
-    
-    hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
- 
-    l_b = np.array([l_h, l_s, l_v])
-    u_b = np.array([u_h, u_s, u_v])
-    i_b = np.array([i_h, i_s, i_v]) #new code test
-    k_b = np.array([k_h, k_s, k_v]) #blue dark
-    m_b = np.array([m_h, m_s, m_v]) #keyboard
-    n_b = np.array([n_h, n_h, n_v]) #keyboard 2
-
-    mask = cv2.inRange(hsv, l_b, u_b)
-    draw = cv2.inRange(hsv, i_b, l_b) #draw dari i_b
-    blue_dark = cv2.inRange(hsv, k_b, l_b) #detect blue dark
-    keyboard = cv2.inRange(hsv, m_b, l_b) #detect keyboard
-    keyboard2 = cv2.inRange(hsv, n_b, l_b) #detect keyboard 2
-
-
-    cnts, _ = cv2.findContours(mask,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
-    test, _ = cv2.findContours(draw,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
-    bd, _ = cv2.findContours(blue_dark,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
-    kb, _ = cv2.findContours(keyboard,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
-    kb2, _ = cv2.findContours(keyboard2,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
-    for b in bd:
-        area=cv2.contourArea(b)
-        if area>2000:
-            cv2.drawContours(frame,[b],-1,(255,0,0),3)
-            M=cv2.moments(b)
-            cx=int(M["m10"]/M["m00"])
-            cy=int(M["m01"]/M["m00"])
- 
-            #cv2.circle(frame,(cx,cy),3,(255,255,255),-1)
-            cv2.putText(frame,"Laptop",(cx-12, cy-12),cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255),2)
-    for k in kb:
-        area=cv2.contourArea(k)
-        if area>1500:
-            cv2.drawContours(frame,[k], -1,(255, 0, 0), 3)
-            M=cv2.moments(k)
-            cx=int(M["m10"]/M["m00"])
-            cy=int(M["m01"]/M["m00"])
-            cv2.circle(frame,(cx,cy),1,(255,255,255),-1)
-            cv2.putText(frame,"Keycaps",(cx-12, cy-12),cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255),2)
-    for k2 in kb2:
-        area=cv2.contourArea(k2)
-        if area>1000:
-            cv2.drawContours(frame,[k2], -1,(255, 0, 0), 3)
-            M=cv2.moments(k2)
-            cx=int(M["m10"]/M["m00"])
-            cy=int(M["m01"]/M["m00"])
-            cv2.circle(frame,(cx,cy),1,(255,255,255),-1)
-            cv2.putText(frame,"Keyboard",(cx-12, cy-12),cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255),2)
-    
-    res = cv2.bitwise_and(frame, frame, mask=mask)
- 
-    cv2.imshow("Window Deteksi Warna", frame)
-    key=cv2.waitKey(5)
-    if key==ord('q'):
+  
+#url='http://192.168.43.254/cam-hi.jpg'     #URL dimasukkan kesini untuk request dari urllib
+#webcam = cv2.VideoCapture('rtsp://192.168.43.1:8080/h264_ulaw.sdp')  
+# Start
+while(1):
+    img_resp = urllib.request.urlopen(url)                          #tarik url ke img_resp untuk mengambil data input dari kamera
+    imgnp = np.array(bytearray(img_resp.read()), dtype = np.uint8)  #ekstrak data menjadi data
+    imageFrame = cv2.imdecode(imgnp, -1)                            #decode data menjadi image (videoStream)
+    #_, imageFrame = webcam.read()
+    hsvFrame = cv2.cvtColor(imageFrame, cv2.COLOR_BGR2HSV)          #konversi BGR ke HSV
+  
+    # Set range for tanahSetengahKering dan 
+    # define mask
+    tanahSetengahKering_lower = np.array([17, 93, 67], np.uint8)            #tanah setengah kering
+    tanahSetengahKering_upper = np.array([169, 183, 168], np.uint8)             #mask tanah setengah kering
+    tanahSetengahKering_mask = cv2.inRange(hsvFrame, tanahSetengahKering_lower, tanahSetengahKering_upper)
+  
+    # Set range for tanahKering dan
+    # define mask
+    tanahKering_lower = np.array([17, 142, 81], np.uint8)          #tanah kering
+    tanahKering_upper = np.array([195, 233, 185], np.uint8)          #mask tanah kering
+    tanahKering_mask = cv2.inRange(hsvFrame, tanahKering_lower, tanahKering_upper)
+  
+    # Set range for tanahBasah dan
+    # define mask
+    tanahBasah_lower = np.array([17, 93, 67], np.uint8)                 #tanah basah
+    tanahBasah_upper = np.array([195, 233, 185], np.uint8)             #mask tanah basah
+    tanahBasah_mask = cv2.inRange(hsvFrame, tanahBasah_lower, tanahBasah_upper)
+      
+    # Morphological Transform, Dilation
+    # for each color and bitwise_and operator
+    # between imageFrame and mask determines
+    # to detect only that particular color
+    kernal = np.ones((5, 5), "uint8")
+      
+    # For tanahSetengahKering color
+    tanahSetengahKering_mask = cv2.dilate(tanahSetengahKering_mask, kernal)
+    res_tanahSetengahKering = cv2.bitwise_and(imageFrame, imageFrame, 
+                              mask = tanahSetengahKering_mask)
+      
+    # For tanahKering color
+    tanahKering_mask = cv2.dilate(tanahKering_mask, kernal)
+    res_green = cv2.bitwise_and(imageFrame, imageFrame,
+                                mask = tanahKering_mask)
+      
+    # For tanahBasah color
+    tanahBasah_mask = cv2.dilate(tanahBasah_mask, kernal)
+    res_blue = cv2.bitwise_and(imageFrame, imageFrame,
+                               mask = tanahBasah_mask)
+   
+    # buat contour untuk track tanahSetengahKering color
+    contours, hierarchy = cv2.findContours(tanahSetengahKering_mask,
+                                           cv2.RETR_TREE,
+                                           cv2.CHAIN_APPROX_SIMPLE)
+      
+    for pic, contour in enumerate(contours):
+        area = cv2.contourArea(contour)
+        if(area > 300):
+            x, y, w, h = cv2.boundingRect(contour)
+            imageFrame = cv2.rectangle(imageFrame, (x, y), 
+                                       (x + w, y + h), 
+                                       (57, 56, 27), 2)
+              
+            cv2.putText(imageFrame, "Tanah St. Kering", (x, y),
+                        cv2.FONT_HERSHEY_SIMPLEX, 1.0,
+                        (255, 255, 255))    
+  
+    # buat contour untuk track tanahKering color
+    contours, hierarchy = cv2.findContours(tanahKering_mask,
+                                           cv2.RETR_TREE,
+                                           cv2.CHAIN_APPROX_SIMPLE)
+      
+    for pic, contour in enumerate(contours):
+        area = cv2.contourArea(contour)
+        if(area > 300):
+            x, y, w, h = cv2.boundingRect(contour)
+            imageFrame = cv2.rectangle(imageFrame, (x, y), 
+                                       (x + w, y + h),
+                                       (0, 255, 0), 2)
+              
+            cv2.putText(imageFrame, "Tanah Kering", (x, y),
+                        cv2.FONT_HERSHEY_SIMPLEX, 
+                        1.0, (0, 255, 0))
+  
+    # buat contour untuk track tanahBasah color
+    contours, hierarchy = cv2.findContours(tanahBasah_mask,
+                                           cv2.RETR_TREE,
+                                           cv2.CHAIN_APPROX_SIMPLE)
+    for pic, contour in enumerate(contours):
+        area = cv2.contourArea(contour)
+        if(area > 300):
+            x, y, w, h = cv2.boundingRect(contour)
+            imageFrame = cv2.rectangle(imageFrame, (x, y),
+                                       (x + w, y + h),
+                                       (255, 0, 0), 2)
+              
+            cv2.putText(imageFrame, "Tanah Basah", (x, y),
+                        cv2.FONT_HERSHEY_SIMPLEX,
+                        1.0, (255, 0, 0))
+              
+    # panggil program
+    cv2.imshow("Window Deteksi Warna", imageFrame)
+    #cv2.imshow("Mask Area", tanahKering_mask)
+    if cv2.waitKey(10) & 0xFF == ord('q'):
+        cv2.destroyAllWindows()
         break
-    
- 
-cv2.destroyAllWindows()
