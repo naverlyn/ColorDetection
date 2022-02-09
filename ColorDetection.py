@@ -144,11 +144,11 @@ while True:
     img_counter += 1
     img = cv2.imread(img_name)
     cv2.imshow("w", img)
-    if (picTanahKering <= picTanahBasah or picTanahKering < picTanahSetengahKering):
+    if (picTanahKering <= picTanahBasah and picTanahKering < picTanahSetengahKering):
         logTanahKering()
-    elif (picTanahKering >= picTanahKering or picTanahKering > picTanahBasah):
+    elif (picTanahKering >= picTanahKering and picTanahKering > picTanahBasah):
         logTanahSetengahKering()
-    elif (picTanahKering != picTanahBasah or picTanahKering != picTanahSetengahKering):
+    elif (picTanahKering != picTanahBasah and picTanahKering != picTanahSetengahKering):
         logTanahBasah()
 
     time.sleep(5)
