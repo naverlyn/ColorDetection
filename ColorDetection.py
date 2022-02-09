@@ -3,9 +3,9 @@ import time
 import logging
 import numpy as np
 
-# webcam = cv2.VideoCapture('rtsp://192.168.43.1:8080/h264_pcm.sdp')
+webcam = cv2.VideoCapture('rtsp://192.168.1.7:8080/h264_pcm.sdp')
 img_counter = 0
-webcam = cv2.VideoCapture(0)
+#webcam = cv2.VideoCapture(0)
 
 
 def logTanahKering():
@@ -15,7 +15,7 @@ def logTanahKering():
                         format='%(asctime)s [%(levelname)s] - %(message)s',
                         datefmt='%H:%M:%S')
     logging.info('found tanah Kering di lokasi: ' +
-                         'Tanah ini harus diberi air!')
+                 'Tanah ini harus diberi air!')
 
 
 def logTanahSetengahKering():
@@ -25,7 +25,7 @@ def logTanahSetengahKering():
                         format='%(asctime)s [%(levelname)s] - %(message)s',
                         datefmt='%H:%M:%S')
     logging.info('found tanah Setengah Kering di lokasi: ' +
-                         'Tanah ini harus diberi sedikit air!')
+                 'Tanah ini harus diberi sedikit air!')
 
 
 def logTanahBasah():
@@ -35,15 +35,16 @@ def logTanahBasah():
                         format='%(asctime)s [%(levelname)s] - %(message)s',
                         datefmt='%H:%M:%S')
     logging.info('found tanah Basah di lokasi: ' +
-                         'Tanah tidak perlu diberi air!')
+                 'Tanah tidak perlu diberi air!')
+
 
 if not webcam.isOpened():
     print("Gagal menyakalan kamera")
     exit()
 while True:
-    ret, imageFrame=webcam.read()
-    hsvFrame=cv2.cvtColor(imageFrame, cv2.COLOR_BGR2HSV)
-    tanahSetengahKering_lower=np.array(
+    ret, imageFrame = webcam.read()
+    hsvFrame = cv2.cvtColor(imageFrame, cv2.COLOR_BGR2HSV)
+    tanahSetengahKering_lower = np.array(
         [17, 93, 67], np.uint8)  # tanah setengah kering
     tanahSetengahKering_upper = np.array(
         [169, 183, 168], np.uint8)  # mask tanah setengah kering
@@ -90,7 +91,7 @@ while True:
                                            cv2.RETR_TREE,
                                            cv2.CHAIN_APPROX_SIMPLE)
 
-    for pic, contour in enumerate(contours):
+    for picTanahSetengahKering, contour in enumerate(contours):
         area = cv2.contourArea(contour)
         if(area > 300):
             x, y, w, h = cv2.boundingRect(contour)
@@ -107,7 +108,7 @@ while True:
                                            cv2.RETR_TREE,
                                            cv2.CHAIN_APPROX_SIMPLE)
 
-    for pic, contour in enumerate(contours):
+    for picTanahKering, contour in enumerate(contours):
         area = cv2.contourArea(contour)
         if(area > 300):
             x, y, w, h = cv2.boundingRect(contour)
@@ -123,7 +124,7 @@ while True:
     contours, hierarchy = cv2.findContours(tanahBasah_mask,
                                            cv2.RETR_TREE,
                                            cv2.CHAIN_APPROX_SIMPLE)
-    for pic, contour in enumerate(contours):
+    for picTanahBasah, contour in enumerate(contours):
         area = cv2.contourArea(contour)
         if(area > 300):
             x, y, w, h = cv2.boundingRect(contour)
@@ -138,11 +139,18 @@ while True:
     if not ret:
         print("Tidak bisa mengambil frame")
         break
-    img_name = "IMG_OPENCV_TANAHSETENGAHKERING{}.png".format(img_counter)
+    img_name = "IMG_OPENCV_{}.png".format(img_counter)
     cv2.imwrite(img_name, imageFrame)
     img_counter += 1
     img = cv2.imread(img_name)
     cv2.imshow("w", img)
+    if (picTanahKering <= picTanahBasah or picTanahKering < picTanahSetengahKering):
+        logTanahKering()
+    elif (picTanahKering >= picTanahKering or picTanahKering > picTanahBasah):
+        logTanahSetengahKering()
+    elif (picTanahKering != picTanahBasah or picTanahKering != picTanahSetengahKering):
+        logTanahBasah()
+
     time.sleep(5)
     if cv2.waitKey(1) == ord('q'):
         break
